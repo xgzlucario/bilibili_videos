@@ -55,9 +55,14 @@ func GetRecommendVideos(id string) (string, error) {
 
 	fmt.Println(video.Title, "\t分区:", video.Tname, "\t作者:", video.OwnerName, "\t播放量:", fmt.Sprintf("%.1f万", float64(video.View)/10000.0))
 
+	// 先插入
 	_, err = biliDB.Table("videos").Insert(video)
 	if err != nil {
-		log.Println("插入数据库错误：", err)
+		// 已存在则更新
+		_, err = biliDB.Table("videos").Update(video)
+		if err != nil {
+			log.Println("更新数据库错误：", err)
+		}
 	}
 
 	//card := data.Get("Card") // UP主
