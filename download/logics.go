@@ -13,7 +13,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 // 获取推荐视频列表 avid string
 // 返回随机视频av号 string
 func GetRecommendVideos(id string) (string, error) {
-	body, err := GetAndRead("https://api.bilibili.com/x/web-interface/view/detail?aid=" + id)
+	body, err := GetAndRead("https://api.bilibili.com/x/web-interface/view/detail?bvid=" + id)
 	if err != nil {
 		log.Println("请求接口发生错误：", err)
 		return "", err
@@ -31,7 +31,6 @@ func GetRecommendVideos(id string) (string, error) {
 	stat := view.Get("stat")   // 视频数据
 
 	video := &videos{
-		Aid:      view.Get("aid").ToString(),   // av号
 		Bvid:     view.Get("bvid").ToString(),  // bv号
 		Tid:      view.Get("tid").ToInt(),      // 分区id
 		Tname:    view.Get("tname").ToString(), // 分区名
@@ -74,7 +73,7 @@ func GetRecommendVideos(id string) (string, error) {
 
 	for i := 0; i < related.Size(); i++ {
 		// 添加至RedisDB 集合
-		VideosDB.SAdd(ctx, "videos", related.Get(i, "aid").ToString())
+		VideosDB.SAdd(ctx, "videos", related.Get(i, "bvid").ToString())
 	}
 
 	// 从集合中随机读一个

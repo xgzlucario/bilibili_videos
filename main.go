@@ -20,8 +20,7 @@ func GetVideos(id string) {
 
 func main() {
 	// 以 【猛男版】新 宝 岛 为起点
-	// bvid := "BV1j4411W7F7"
-	aid := "53851218"
+	bvid := "BV1j4411W7F7"
 
 	group := sync.WaitGroup{}
 	// 创建协程
@@ -29,7 +28,7 @@ func main() {
 
 		group.Add(1)
 		go func() {
-			GetVideos(aid)
+			GetVideos(bvid)
 			group.Done()
 		}()
 	}

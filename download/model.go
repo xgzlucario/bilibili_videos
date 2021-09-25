@@ -15,14 +15,13 @@ var (
 
 // 视频信息表结构
 type videos struct {
-	Bvid     string `xorm:"char(16) pk not null"`     // bv号
-	Aid      string `xorm:"char(10) unique not null"` // av号
-	Tid      int    `xorm:"int not null"`             // 分区id
-	Tname    string `xorm:"varchar(16) not null"`     // 分区名
-	Pubdate  int    `xorm:"int(16) not null"`         // 上传日期
-	Title    string `xorm:"text not null"`            // 视频标题
-	Desc     string `xorm:"text not null"`            // 视频简介
-	Duration int    `xorm:"int not null"`             // 视频时长
+	Bvid     string `xorm:"char(16) pk not null"` // bv号
+	Tid      int    `xorm:"int not null"`         // 分区id
+	Tname    string `xorm:"varchar(16) not null"` // 分区名
+	Pubdate  int    `xorm:"int(16) not null"`     // 上传日期
+	Title    string `xorm:"text not null"`        // 视频标题
+	Desc     string `xorm:"text not null"`        // 视频简介
+	Duration int    `xorm:"int not null"`         // 视频时长
 
 	View     int64 `xorm:"int not null"` // 播放量
 	Danmaku  int64 `xorm:"int not null"` // 弹幕
