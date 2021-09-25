@@ -16,7 +16,7 @@ func GetVideos(id string) {
 			return
 		}
 		// 别着急，小心被封ip
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 50)
 	}
 }
 

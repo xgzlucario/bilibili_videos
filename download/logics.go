@@ -3,7 +3,6 @@ package download
 import (
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 )
 
@@ -12,10 +11,8 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // GetRecommendVideos
 // 获取推荐视频列表 avid string
-// 返回推荐视频av号 []string
+// 返回随机视频av号 string
 func GetRecommendVideos(id string) (string, error) {
-	results := bson.M{}
-
 	body, err := GetAndRead("https://api.bilibili.com/x/web-interface/view/detail?aid=" + id)
 	if err != nil {
 		log.Println("请求接口发生错误：", err)
@@ -29,35 +26,38 @@ func GetRecommendVideos(id string) (string, error) {
 
 	data := json.Get(body, "data")
 
-	// 视频详细信息
-	view := data.Get("View")
-	results["bvid"] = view.Get("bvid").ToString()      // bv号
-	results["aid"] = view.Get("aid").ToString()        // bv号
-	results["tid"] = view.Get("tid").ToInt()           // 分区id
-	results["tname"] = view.Get("tname").ToString()    // 分区名
-	results["title"] = view.Get("title").ToString()    // 视频标题
-	results["pubdate"] = view.Get("pubdate").ToInt()   // 上传日期
-	results["desc"] = view.Get("desc").ToString()      // 视频简介
-	results["duration"] = view.Get("duration").ToInt() // 视频时长
+	view := data.Get("View")   // 视频详细信息
+	owner := view.Get("owner") // up主
+	stat := view.Get("stat")   // 视频数据
 
-	owner := view.Get("owner")                           // up主
-	results["owner_id"] = owner.Get("mid").ToString()    // up主id
-	results["owner_name"] = owner.Get("name").ToString() // up主名
+	video := &videos{
+		Aid:      view.Get("aid").ToString(),   // av号
+		Bvid:     view.Get("bvid").ToString(),  // bv号
+		Tid:      view.Get("tid").ToInt(),      // 分区id
+		Tname:    view.Get("tname").ToString(), // 分区名
+		Title:    view.Get("title").ToString(), // 视频标题
+		Pubdate:  view.Get("pubdate").ToInt(),  // 上传日期
+		Desc:     view.Get("desc").ToString(),  // 视频简介
+		Duration: view.Get("duration").ToInt(), // 视频时长
 
-	stat := view.Get("stat")                             // 视频数据
-	results["view"] = stat.Get("view").ToInt64()         // 播放量
-	results["danmaku"] = stat.Get("danmaku").ToInt64()   // 弹幕
-	results["reply"] = stat.Get("reply").ToInt64()       // 评论
-	results["favorite"] = stat.Get("favorite").ToInt64() // 收藏
-	results["coin"] = stat.Get("coin").ToInt64()         // 硬币
-	results["share"] = stat.Get("share").ToInt64()       // 分享
-	results["his_rank"] = stat.Get("his_rank").ToInt()   // 历史全站最高排名
+		View:     stat.Get("view").ToInt64(),     // 播放量
+		Like:     stat.Get("like").ToInt64(),     // 点赞
+		Danmaku:  stat.Get("danmaku").ToInt64(),  // 弹幕
+		Reply:    stat.Get("reply").ToInt64(),    // 评论
+		Favorite: stat.Get("favorite").ToInt64(), // 收藏
+		Coin:     stat.Get("coin").ToInt64(),     // 硬币
+		Share:    stat.Get("share").ToInt64(),    // 分享
+		HisRank:  stat.Get("his_rank").ToInt(),   // 历史全站最高排名
 
-	fmt.Println(results["title"], "\t分区:", results["tname"], "\t作者:", results["owner_name"], "\t播放量:", fmt.Sprintf("%.1f万", float64(results["view"].(int64))/10000.0))
+		OwnerId:   owner.Get("mid").ToString(),  // up主id
+		OwnerName: owner.Get("name").ToString(), // up主名
+	}
 
-	_, err = BiliColl.UpsertId(ctx, results["bvid"], results)
+	fmt.Println(video.Title, "\t分区:", video.Tname, "\t作者:", video.OwnerName, "\t播放量:", fmt.Sprintf("%.1f万", float64(video.View)/10000.0))
+
+	_, err = biliDB.Table("videos").Insert(video)
 	if err != nil {
-		log.Println("写入mongo错误：", err)
+		log.Println("插入数据库错误：", err)
 	}
 
 	//card := data.Get("Card") // UP主
