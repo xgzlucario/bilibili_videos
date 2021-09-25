@@ -2,10 +2,12 @@ package download
 
 import (
 	"context"
+	"github.com/go-redis/redis/v8"
 	"github.com/qiniu/qmgo"
 )
 
-var BiliColl *qmgo.Collection
+var BiliColl *qmgo.Collection // MongoDB
+var VideosDB *redis.Client    // RedisDB
 var ctx = context.Background()
 
 func init() {
@@ -16,4 +18,10 @@ func init() {
 		panic(err)
 	}
 	BiliColl = client.Database("bili").Collection("videos")
+
+	// RedisDB
+	VideosDB = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+		DB:   5,
+	})
 }

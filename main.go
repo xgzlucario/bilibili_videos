@@ -2,23 +2,21 @@ package main
 
 import (
 	"bilibili_videos/download"
-	"math/rand"
+	"log"
 	"time"
 )
 
 // GetVideos 循环调用
 func GetVideos(id string) {
+	var err error
 	for {
-		resList := download.GetRecommendVideos(id)
-
-		//将时间戳设置成种子数
-		rand.Seed(time.Now().Unix())
-		// 从推荐列表中随机选择一个视频
-		ranId := rand.Intn(len(resList))
-		id = resList[ranId]
-
+		id, err = download.GetRecommendVideos(id)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		// 别着急，小心被封ip
-		time.Sleep(time.Millisecond * 200)
+		time.Sleep(time.Millisecond * 100)
 	}
 }
 

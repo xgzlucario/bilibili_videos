@@ -13,13 +13,13 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 // GetRecommendVideos
 // 获取推荐视频列表 avid string
 // 返回推荐视频av号 []string
-func GetRecommendVideos(id string) []string {
+func GetRecommendVideos(id string) (string, error) {
 	results := bson.M{}
 
 	body, err := GetAndRead("https://api.bilibili.com/x/web-interface/view/detail?aid=" + id)
 	if err != nil {
 		log.Println("请求接口发生错误：", err)
-		return []string{}
+		return "", err
 	}
 	// 请求错误
 	code := json.Get(body, "code").ToInt()
@@ -31,13 +31,14 @@ func GetRecommendVideos(id string) []string {
 
 	// 视频详细信息
 	view := data.Get("View")
-	results["bvid"] = view.Get("bvid").ToString()    // bv号
-	results["aid"] = view.Get("aid").ToString()      // bv号
-	results["tid"] = view.Get("tid").ToInt()         // 分区id
-	results["tname"] = view.Get("tname").ToString()  // 分区名
-	results["title"] = view.Get("title").ToString()  // 视频标题
-	results["pubdate"] = view.Get("pubdate").ToInt() // 上传日期
-	results["desc"] = view.Get("desc").ToString()    // 视频简介
+	results["bvid"] = view.Get("bvid").ToString()      // bv号
+	results["aid"] = view.Get("aid").ToString()        // bv号
+	results["tid"] = view.Get("tid").ToInt()           // 分区id
+	results["tname"] = view.Get("tname").ToString()    // 分区名
+	results["title"] = view.Get("title").ToString()    // 视频标题
+	results["pubdate"] = view.Get("pubdate").ToInt()   // 上传日期
+	results["desc"] = view.Get("desc").ToString()      // 视频简介
+	results["duration"] = view.Get("duration").ToInt() // 视频时长
 
 	owner := view.Get("owner")                           // up主
 	results["owner_id"] = owner.Get("mid").ToString()    // up主id
@@ -66,12 +67,15 @@ func GetRecommendVideos(id string) []string {
 	// 推荐视频
 	related := data.Get("Related")
 
-	aidList := make([]string, related.Size())
 	for i := 0; i < related.Size(); i++ {
-		// 找一个不同作者
-		if related.Get(i, "tname").ToString() != "明星" {
-			aidList[i] = related.Get(i, "aid").ToString()
-		}
+		// 添加至RedisDB 集合
+		VideosDB.SAdd(ctx, "videos", related.Get(i, "aid").ToString())
 	}
-	return aidList
+
+	// 从集合中随机读一个
+	id, err = VideosDB.SRandMember(ctx, "videos").Result()
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
