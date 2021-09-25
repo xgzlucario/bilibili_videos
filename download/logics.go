@@ -52,6 +52,8 @@ func GetRecommendVideos(id string) []string {
 	results["share"] = stat.Get("share").ToInt64()       // 分享
 	results["his_rank"] = stat.Get("his_rank").ToInt()   // 历史全站最高排名
 
+	fmt.Println(results["title"], "\t分区:", results["tname"], "\t作者:", results["owner_name"], "\t播放量:", fmt.Sprintf("%.1f万", float64(results["view"].(int64))/10000.0))
+
 	_, err = BiliColl.UpsertId(ctx, results["bvid"], results)
 	if err != nil {
 		log.Println("写入mongo错误：", err)
@@ -66,7 +68,10 @@ func GetRecommendVideos(id string) []string {
 
 	aidList := make([]string, related.Size())
 	for i := 0; i < related.Size(); i++ {
-		aidList[i] = related.Get(i, "aid").ToString()
+		// 找一个不同作者
+		if related.Get(i, "tname").ToString() != "明星" {
+			aidList[i] = related.Get(i, "aid").ToString()
+		}
 	}
 	return aidList
 }
