@@ -2,7 +2,6 @@ package main
 
 import (
 	"bilibili_videos/download"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -34,6 +33,6 @@ func main() {
 			group.Done()
 		}()
 	}
-	fmt.Println("程序正在运行中...")
+	log.Println("程序正在运行中...")
 	group.Wait()
 }
