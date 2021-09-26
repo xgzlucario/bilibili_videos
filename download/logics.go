@@ -32,6 +32,8 @@ GET:
 	if code < 0 {
 		// 打印错误信息, 更换id
 		log.Println(json.Get(body, "message").ToString())
+		log.Println(err, "3秒后重试...")
+		time.Sleep(time.Second * 3)
 		return getRandomBvid(), nil
 	}
 
