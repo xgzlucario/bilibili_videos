@@ -2,8 +2,10 @@ package main
 
 import (
 	"bilibili_videos/download"
+	"fmt"
 	"log"
 	"sync"
+	"time"
 )
 
 // GetVideos 循环调用
@@ -15,6 +17,7 @@ func GetVideos(id string) {
 			log.Println(err)
 			return
 		}
+		time.Sleep(time.Millisecond * 100)
 	}
 }
 
@@ -24,13 +27,13 @@ func main() {
 
 	group := sync.WaitGroup{}
 	// 创建协程
-	for gNum := 0; gNum < 2; gNum++ {
-
+	for gNum := 0; gNum < 3; gNum++ {
 		group.Add(1)
 		go func() {
 			GetVideos(bvid)
 			group.Done()
 		}()
 	}
+	fmt.Println("程序正在运行中...")
 	group.Wait()
 }

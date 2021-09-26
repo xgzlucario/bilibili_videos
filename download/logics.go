@@ -1,27 +1,38 @@
 package download
 
 import (
-	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"log"
+	"time"
 )
 
 // jsoniter
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+// 获取随机视频bvid
+func getRandomBvid() string {
+	// 从集合中随机读一个
+	id, _ := VideosDB.SRandMember(ctx, "videos").Result()
+	return id
+}
+
 // GetRecommendVideos
-// 获取推荐视频列表 avid string
-// 返回随机视频av号 string
+// id:    视频bv号
+// return: 随机视频bv号
 func GetRecommendVideos(id string) (string, error) {
-	body, err := GetAndRead("https://api.bilibili.com/x/web-interface/view/detail?bvid=" + id)
+GET:
+	body, err := GetAndRead("http://api.bilibili.com/x/web-interface/view/detail?bvid=" + id)
 	if err != nil {
-		log.Println("请求接口发生错误：", err)
-		return "", err
+		log.Println(err, "3秒后重试...")
+		time.Sleep(time.Second * 3)
+		goto GET
 	}
 	// 请求错误
 	code := json.Get(body, "code").ToInt()
 	if code < 0 {
-		fmt.Println(json.Get(body, "message").ToString())
+		// 打印错误信息, 更换id
+		log.Println(json.Get(body, "message").ToString())
+		return getRandomBvid(), nil
 	}
 
 	data := json.Get(body, "data")
@@ -30,7 +41,7 @@ func GetRecommendVideos(id string) (string, error) {
 	owner := view.Get("owner") // up主
 	stat := view.Get("stat")   // 视频数据
 
-	video := &videos{
+	video := &Videos{
 		Bvid:     view.Get("bvid").ToString(),  // bv号
 		Tid:      view.Get("tid").ToInt(),      // 分区id
 		Tname:    view.Get("tname").ToString(), // 分区名
@@ -52,15 +63,13 @@ func GetRecommendVideos(id string) (string, error) {
 		OwnerName: owner.Get("name").ToString(), // up主名
 	}
 
-	fmt.Println(video.Title, "\t分区:", video.Tname, "\t作者:", video.OwnerName, "\t播放量:", fmt.Sprintf("%.1f万", float64(video.View)/10000.0))
-
 	// 先插入
 	_, err = biliDB.Table("videos").Insert(video)
 	if err != nil {
 		// 已存在则更新
-		_, err = biliDB.Table("videos").Update(video)
+		_, err = biliDB.Table("videos").ID(video.Bvid).Update(video)
 		if err != nil {
-			log.Println("更新数据库错误：", err)
+			log.Println("update db error: ", video, err)
 		}
 	}
 
@@ -76,10 +85,6 @@ func GetRecommendVideos(id string) (string, error) {
 		VideosDB.SAdd(ctx, "videos", related.Get(i, "bvid").ToString())
 	}
 
-	// 从集合中随机读一个
-	id, err = VideosDB.SRandMember(ctx, "videos").Result()
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	// 获取随机id
+	return getRandomBvid(), nil
 }

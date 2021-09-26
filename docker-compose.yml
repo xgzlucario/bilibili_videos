@@ -1,0 +1,31 @@
+version: '3'
+services:
+  pg:
+    image: postgres
+    container_name: "bili_videos_postgres"
+    volumes:
+      - pg_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+
+  redis:
+    image: redis
+    container_name: "bili_videos_redis"
+    volumes:
+      - redis_data:/var/lib/redis
+
+  web:
+    container_name: "bili_videos_go"
+    build: .
+    links:
+      - pg
+      - redis
+    depends_on:
+      - pg
+      - redis
+
+volumes:
+  pg_data: {}
+  redis_data: {}

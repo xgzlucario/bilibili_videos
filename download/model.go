@@ -13,11 +13,11 @@ var (
 	ctx      = context.Background()
 )
 
-// 视频信息表结构
-type videos struct {
+// Videos 视频信息表结构
+type Videos struct {
 	Bvid     string `xorm:"char(16) pk not null"` // bv号
 	Tid      int    `xorm:"int not null"`         // 分区id
-	Tname    string `xorm:"varchar(16) not null"` // 分区名
+	Tname    string `xorm:"char(16) not null"`    // 分区名
 	Pubdate  int    `xorm:"int(16) not null"`     // 上传日期
 	Title    string `xorm:"text not null"`        // 视频标题
 	Desc     string `xorm:"text not null"`        // 视频简介
@@ -32,28 +32,28 @@ type videos struct {
 	Share    int64 `xorm:"int not null"` // 分享
 	HisRank  int   `xorm:"int not null"` // 历史最高全站排名
 
-	OwnerId   string `xorm:"varchar(16) not null"` // UP主id
-	OwnerName string `xorm:"varchar(16) not null"` // UP主名
+	OwnerId   string `xorm:"char(16) not null"` // UP主id
+	OwnerName string `xorm:"char(32) not null"` // UP主名
 }
 
 func init() {
 	var err error
 
 	// 连接UserDB
-	connStr := "postgres://postgres:123456@127.0.0.1:5432/videos?sslmode=disable"
+	connStr := "postgres://postgres:123456@bili_videos_postgres:5432/postgres?sslmode=disable"
 	biliDB, err = xorm.NewEngine("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
 	// 建表
-	err = biliDB.Sync2(new(videos))
+	err = biliDB.Sync2(new(Videos))
 	if err != nil {
 		panic(err)
 	}
 
 	// RedisDB
 	VideosDB = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: "bili_videos_redis:6379",
 		DB:   5,
 	})
 }
