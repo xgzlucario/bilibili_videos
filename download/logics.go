@@ -1,7 +1,6 @@
 package download
 
 import (
-	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"time"
@@ -94,8 +93,17 @@ GET:
 
 // ShowDataBase 展示数据库信息
 func ShowDataBase() {
-	count1, _ := biliDB.Table("videos").Count()
-	count2, _ := VideosDB.SCard(ctx, "videos").Result()
-	fmt.Println("PostgreSql 数据总量:", count1)
-	fmt.Println("Redis 数据总量:", count2)
+	count1, err := biliDB.Table("videos").Count()
+	if err != nil {
+		log.Println("获取Postgresql数据失败,", err)
+	} else {
+		log.Println("Postgresql数据总量:", count1)
+	}
+
+	count2, err := VideosDB.SCard(ctx, "videos").Result()
+	if err != nil {
+		log.Println("获取Redis数据失败,", err)
+	} else {
+		log.Println("Redis数据总量:", count2)
+	}
 }
