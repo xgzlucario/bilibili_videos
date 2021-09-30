@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// GetVideos 循环调用
-func GetVideos(id string) {
+// 循环调用
+func getVideos(id string) {
 	var err error
 	for {
 		id, err = download.GetRecommendVideos(id)
@@ -17,6 +17,14 @@ func GetVideos(id string) {
 			return
 		}
 		time.Sleep(time.Millisecond * 100)
+	}
+}
+
+// 打印数据库信息
+func printData() {
+	for {
+		download.ShowDataBase()
+		time.Sleep(time.Minute)
 	}
 }
 
@@ -29,10 +37,12 @@ func main() {
 	for gNum := 0; gNum < 3; gNum++ {
 		group.Add(1)
 		go func() {
-			GetVideos(bvid)
+			getVideos(bvid)
 			group.Done()
 		}()
 	}
-	log.Println("程序正在运行中...")
+	log.Println("正在下载视频数据...")
+	go printData()
+
 	group.Wait()
 }

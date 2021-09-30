@@ -1,6 +1,7 @@
 package download
 
 import (
+	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"time"
@@ -89,4 +90,12 @@ GET:
 
 	// 获取随机id
 	return getRandomBvid(), nil
+}
+
+// ShowDataBase 展示数据库信息
+func ShowDataBase() {
+	count1, _ := biliDB.Table("videos").Count()
+	count2, _ := VideosDB.SCard(ctx, "videos").Result()
+	fmt.Println("PostgreSql 数据总量:", count1)
+	fmt.Println("Redis 数据总量:", count2)
 }
