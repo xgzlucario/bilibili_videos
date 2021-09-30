@@ -1,6 +1,6 @@
 # bilibili_videos
 
-## 一、项目介绍
+### 项目介绍
 
 本项目为爬取b站所有视频数据，用于个人统计
 
@@ -8,7 +8,9 @@
 
 api地址：https://api.bilibili.com/x/web-interface/view/detail?bvid=BV1j4411W7F7
 
-#### 数据结构
+
+
+### 数据结构
 
 ```go
 // Videos 视频信息表结构
@@ -35,11 +37,40 @@ type Videos struct {
 }
 ```
 
-#### 数据库存储路径
 
-数据库信息使用docker数据卷！
 
-所有视频bv号：docker-volume-redis_data
+### 启动项目
 
-视频详细信息：docker-volume-pg_data
+打开cmd，进入项目根目录，输入
+
+```she
+docker-compose up
+```
+
+
+
+### 数据库存储路径
+
+所有视频bv号：.data/redis
+
+视频详细信息：.data/pg
+
+
+
+### 如何查看所有视频数据
+
+首先启动容器，容器中的postgres数据库自动加载数据，并映射到本地端口10123
+
+```shell
+ports:
+  	- "10123:5432"  # 暴露端口 可以在本地端口10123查看数据
+volumes:
+	- .data/pg:/var/lib/postgresql  # 数据持久化至本地
+environment:
+	- POSTGRES_DB=videos  # 默认数据库
+	- POSTGRES_USER=postgres  # 用户名
+	- POSTGRES_PASSWORD=123456  # 密码
+```
+
+打开navicat或其他数据库管理工具，输入端口、数据库名（"videos"）、用户名、密码，即可连接
 

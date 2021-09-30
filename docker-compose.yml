@@ -3,8 +3,10 @@ services:
   pg:
     image: postgres
     container_name: "bili_videos_postgres"
+    ports:
+      - "10123:5432"  # 暴露端口 可以本地连接查看数据
     volumes:
-      - pg_data:/var/lib/postgresql
+      - .data/pg:/var/lib/postgresql  # 数据持久化至本地
     environment:
       - POSTGRES_DB=videos
       - POSTGRES_USER=postgres
@@ -14,7 +16,7 @@ services:
     image: redis
     container_name: "bili_videos_redis"
     volumes:
-      - redis_data:/var/lib/redis
+      - .data/redis:/var/lib/redis  # 数据持久化至本地
 
   web:
     container_name: "bili_videos_go"
@@ -26,6 +28,6 @@ services:
       - pg
       - redis
 
-volumes:
-  pg_data: {}
-  redis_data: {}
+#volumes:
+#  pg_data: {}
+#  redis_data: {}
