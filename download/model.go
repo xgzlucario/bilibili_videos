@@ -16,8 +16,6 @@ var (
 // Videos 视频信息表结构
 type Videos struct {
 	Bvid     string `xorm:"char(16) pk not null"` // bv号
-	Tid      int    `xorm:"int not null"`         // 分区id
-	Tname    string `xorm:"char(16) not null"`    // 分区名
 	Pubdate  int    `xorm:"int(16) not null"`     // 上传日期
 	Title    string `xorm:"text not null"`        // 视频标题
 	Desc     string `xorm:"text not null"`        // 视频简介
@@ -32,10 +30,29 @@ type Videos struct {
 	Share    int64 `xorm:"int not null"` // 分享
 	HisRank  int   `xorm:"int not null"` // 历史最高全站排名
 
-	OwnerId   string `xorm:"char(16) not null"` // UP主id
-	OwnerName string `xorm:"char(32) not null"` // UP主名
+	OwnerId string `xorm:"char(16) not null"` // UP主id
+	Tid     int    `xorm:"int not null"`      // 分区id
 }
 
+// Uploaders UP主
+type Uploaders struct {
+	Id        string `xorm:"char(16) pk not null"`     // UP主id
+	Name      string `xorm:"char(32) unique not null"` // UP主名
+	Sex       string `xorm:"char(4) not null"`         // 性别
+	Rank      int    `xorm:"int not null"`             // 全站排名
+	Fans      int64  `xorm:"int not null"`             // 粉丝数
+	Likes     int64  `xorm:"int not null"`             // 获赞总数
+	Attention int64  `xorm:"int not null"`             // 关注
+	Sign      string `xorm:"text not null"`            // 个性签名
+}
+
+// Partitions 视频分区
+type Partitions struct {
+	Id   int    `xorm:"int pk not null"`          // 分区id
+	Name string `xorm:"char(16) unique not null"` // 分区名
+}
+
+// 建表
 func init() {
 	var err error
 
@@ -50,10 +67,18 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	err = biliDB.Sync2(new(Partitions))
+	if err != nil {
+		panic(err)
+	}
+	err = biliDB.Sync2(new(Uploaders))
+	if err != nil {
+		panic(err)
+	}
 
 	// RedisDB
 	VideosDB = redis.NewClient(&redis.Options{
 		Addr: "bili_videos_redis:6379",
-		DB:   5,
+		DB:   0,
 	})
 }

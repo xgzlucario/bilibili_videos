@@ -23,7 +23,6 @@ func GetRecommendVideos(id string) (string, error) {
 GET:
 	body, err := GetAndRead("http://api.bilibili.com/x/web-interface/view/detail?bvid=" + id)
 	if err != nil {
-		log.Println(err, "3秒后重试...")
 		time.Sleep(time.Second * 3)
 		goto GET
 	}
@@ -32,9 +31,8 @@ GET:
 	if code < 0 {
 		// 打印错误信息, 更换id
 		log.Println(json.Get(body, "message").ToString())
-		log.Println(err, "3秒后重试...")
 		time.Sleep(time.Second * 3)
-		return getRandomBvid(), nil
+		goto GET
 	}
 
 	data := json.Get(body, "data")
@@ -43,10 +41,10 @@ GET:
 	owner := view.Get("owner") // up主
 	stat := view.Get("stat")   // 视频数据
 
+	// 视频
 	video := &Videos{
 		Bvid:     view.Get("bvid").ToString(),  // bv号
 		Tid:      view.Get("tid").ToInt(),      // 分区id
-		Tname:    view.Get("tname").ToString(), // 分区名
 		Title:    view.Get("title").ToString(), // 视频标题
 		Pubdate:  view.Get("pubdate").ToInt(),  // 上传日期
 		Desc:     view.Get("desc").ToString(),  // 视频简介
@@ -61,21 +59,46 @@ GET:
 		Share:    stat.Get("share").ToInt64(),    // 分享
 		HisRank:  stat.Get("his_rank").ToInt(),   // 历史全站最高排名
 
-		OwnerId:   owner.Get("mid").ToString(),  // up主id
-		OwnerName: owner.Get("name").ToString(), // up主名
+		OwnerId: owner.Get("mid").ToString(), // up主id
 	}
 
-	// 先插入
+	// 分区
+	patition := &Partitions{
+		Id:   view.Get("tid").ToInt(),      // 分区id
+		Name: view.Get("tname").ToString(), // 分区名
+	}
+
+	card := data.Get("Card") // UP主信息
+
+	// UP主
+	uploder := &Uploaders{
+		Id:        card.Get("card", "mid").ToString(),      // up主id
+		Name:      card.Get("card", "name").ToString(),     // up主名
+		Sex:       card.Get("card", "sex").ToString(),      // 性别
+		Rank:      card.Get("card", "rank").ToInt(),        // 排名
+		Fans:      card.Get("follower").ToInt64(),          // 粉丝
+		Likes:     card.Get("like_num").ToInt64(),          // 获赞总数
+		Attention: card.Get("card", "attention").ToInt64(), // 关注
+		Sign:      card.Get("card", "sign").ToString(),     // 个性签名
+	}
+
+	// 先插入 已存在则更新
+	// 视频信息
 	_, err = biliDB.Table("videos").Insert(video)
 	if err != nil {
-		// 已存在则更新
 		_, err = biliDB.Table("videos").ID(video.Bvid).Update(video)
-		if err != nil {
-			log.Println("update db error: ", video, err)
-		}
+	}
+	// UP主信息
+	_, _ = biliDB.Table("uploaders").Insert(uploder)
+	if err != nil {
+		_, err = biliDB.Table("uploaders").ID(uploder.Id).Update(uploder)
+	}
+	// 分区信息
+	_, _ = biliDB.Table("partitions").Insert(patition)
+	if err != nil {
+		_, err = biliDB.Table("partitions").ID(patition.Id).Update(patition)
 	}
 
-	//card := data.Get("Card") // UP主
 	//tags := data.Get("Tags") // 标签
 	//reply := data.Get("Reply") // 评论
 
