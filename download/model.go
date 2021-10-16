@@ -55,23 +55,15 @@ type Partitions struct {
 // 建表
 func init() {
 	var err error
-
-	// 连接UserDB
+	// 连接DB
 	connStr := "postgres://postgres:123456@bili_videos_postgres:5432/videos?sslmode=disable"
 	biliDB, err = xorm.NewEngine("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
+
 	// 建表
-	err = biliDB.Sync2(new(Videos))
-	if err != nil {
-		panic(err)
-	}
-	err = biliDB.Sync2(new(Partitions))
-	if err != nil {
-		panic(err)
-	}
-	err = biliDB.Sync2(new(Uploaders))
+	err = biliDB.Sync2(new(Videos), new(Partitions), new(Uploaders))
 	if err != nil {
 		panic(err)
 	}

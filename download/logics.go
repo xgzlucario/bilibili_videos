@@ -116,17 +116,10 @@ GET:
 
 // ShowDataBase 展示数据库信息
 func ShowDataBase() {
-	count1, err := biliDB.Table("videos").Count()
-	if err != nil {
-		log.Println("获取Postgresql数据失败,", err)
-	} else {
-		log.Println("Postgresql数据总量:", count1)
-	}
+	videoCount, _ := biliDB.Table("videos").Count()
+	tCount, _ := biliDB.Table("partitions").Count()
+	upCount, _ := biliDB.Table("uploaders").Count()
+	idCount, _ := VideosDB.SCard(ctx, "videos").Result()
 
-	count2, err := VideosDB.SCard(ctx, "videos").Result()
-	if err != nil {
-		log.Println("获取Redis数据失败,", err)
-	} else {
-		log.Println("Redis数据总量:", count2)
-	}
+	log.Printf("详细视频总数：%d，视频bvid总数：%d，分区总数：%d，UP主总数：%d\n", videoCount, idCount, tCount, upCount)
 }
